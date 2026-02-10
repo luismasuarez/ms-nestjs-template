@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from 'generated/prisma/client';
-import { envs } from 'src/shared/config';
+import { envs } from '../../shared/config/envs';
 
 @Injectable()
 export class PrismaService
