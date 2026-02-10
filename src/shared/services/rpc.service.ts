@@ -1,14 +1,14 @@
 import {
   ExecutionContext,
   Injectable,
-  OnModuleInit,
   OnModuleDestroy,
+  OnModuleInit,
 } from '@nestjs/common';
 import { RmqContext } from '@nestjs/microservices';
 import { Channel, Connection, connect } from 'amqplib';
 import { randomUUID } from 'crypto';
 import EventEmitter from 'events';
-import { envs } from '../config';
+import { envs } from '../config/envs';
 
 export interface RpcContext {
   channel: Channel;

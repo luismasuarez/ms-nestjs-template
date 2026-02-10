@@ -21,7 +21,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
-    "db:compose:up": "docker-compose -f docker-compose.local.yml up -d"
+    "db:compose:up": "docker compose -f docker-compose.local.yml up -d"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
