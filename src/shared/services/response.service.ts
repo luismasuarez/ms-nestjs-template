@@ -9,7 +9,7 @@ export interface PaginationMeta {
   hasNext: boolean;
 }
 
-export interface ApiResponse<T = any> {
+export interface Response<T = any> {
   status: 'success' | 'error' | 'warning' | 'info';
   data?: T;
   message?: string;
@@ -26,12 +26,12 @@ export interface ApiResponse<T = any> {
 }
 
 @Injectable()
-export class ApiResponseService {
+export class ResponseService {
   private now() {
     return new Date().toISOString();
   }
 
-  success<T>(data: T, message?: string, requestId?: string): ApiResponse<T> {
+  success<T>(data: T, message?: string, requestId?: string): Response<T> {
     return {
       status: 'success',
       data,
@@ -50,7 +50,7 @@ export class ApiResponseService {
    * @param pagination Pagination information (totalPages, hasPrev, hasNext are optional and will be calculated)
    * @param message Optional success message (defaults to 'Data retrieved successfully')
    * @param requestId Optional request identifier
-   * @returns ApiResponse with pagination metadata
+   * @returns Response with pagination metadata
    */
   successWithPagination<T>(
     data: T,
@@ -59,7 +59,7 @@ export class ApiResponseService {
     },
     message = 'Data retrieved successfully',
     requestId?: string,
-  ): ApiResponse<T> {
+  ): Response<T> {
     const totalPages =
       pagination.totalPages ?? Math.ceil(pagination.total / pagination.limit);
 
@@ -87,14 +87,14 @@ export class ApiResponseService {
     data: T,
     message = 'Resource created successfully',
     requestId?: string,
-  ): ApiResponse<T> {
+  ): Response<T> {
     return this.success(data, message, requestId);
   }
 
   noContent(
     message = 'Resource deleted successfully',
     requestId?: string,
-  ): ApiResponse {
+  ): Response {
     return {
       status: 'success',
       message,
@@ -110,7 +110,7 @@ export class ApiResponseService {
     code = 'INTERNAL_ERROR',
     details?: any,
     requestId?: string,
-  ): ApiResponse {
+  ): Response {
     return {
       status: 'error',
       error: {
@@ -125,7 +125,7 @@ export class ApiResponseService {
     };
   }
 
-  warning(message: string, data?: any, requestId?: string): ApiResponse {
+  warning(message: string, data?: any, requestId?: string): Response {
     return {
       status: 'warning',
       message,
@@ -137,7 +137,7 @@ export class ApiResponseService {
     };
   }
 
-  info(message: string, data?: any, requestId?: string): ApiResponse {
+  info(message: string, data?: any, requestId?: string): Response {
     return {
       status: 'info',
       message,
