@@ -1,7 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 
 // Run npm run prisma:generate to generate the Prisma Client based on the schema.prisma file
-import { PrismaClient } from '../../../generated/prisma/client';
+import { PrismaClient } from './generated/prisma/client';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
