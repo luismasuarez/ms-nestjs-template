@@ -5,7 +5,6 @@ import { RabbitMQInterceptor } from './shared/lib/rabbitmq.interceptor';
 import { NativeRpcService } from './shared/services/native-rpc.service';
 import { PrismaService } from './shared/services/prisma.service';
 import { ResponseService } from './shared/services/response.service';
-import { RpcService } from './shared/services/rpc.service';
 
 @Global()
 @Module({
@@ -13,7 +12,6 @@ import { RpcService } from './shared/services/rpc.service';
   providers: [
     PrismaService,
     ResponseService,
-    RpcService,
     NativeRpcService,
     LoggingInterceptor,
     RabbitMQInterceptor,
@@ -21,7 +19,6 @@ import { RpcService } from './shared/services/rpc.service';
   exports: [
     PrismaService,
     ResponseService,
-    RpcService,
     NativeRpcService,
     LoggingInterceptor,
     RabbitMQInterceptor,

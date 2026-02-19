@@ -6,7 +6,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
-import { RpcService } from '../services/rpc.service';
+import { NativeRpcService } from '../services/native-rpc.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -14,7 +14,7 @@ export class LoggingInterceptor implements NestInterceptor {
   private readonly PAYLOAD_MAX_LENGTH = 200;
   private readonly SLOW_THRESHOLD_MS = 500;
 
-  constructor(private readonly rpcService: RpcService) {}
+  constructor(private readonly rpcService: NativeRpcService) { }
 
   // Códigos ANSI
   private readonly colors = {

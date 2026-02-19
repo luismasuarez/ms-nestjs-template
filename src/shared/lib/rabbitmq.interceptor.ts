@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { Observable, catchError, tap } from 'rxjs';
-import { RpcService } from '../services/rpc.service';
+import { NativeRpcService } from '../services/native-rpc.service';
 
 @Injectable()
 export class RabbitMQInterceptor implements NestInterceptor {
-  constructor(private readonly rpcService: RpcService) {}
+  constructor(private readonly rpcService: NativeRpcService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const rpcContext = this.rpcService.getRpcContext(context);
