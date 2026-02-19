@@ -1,12 +1,33 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { RmqContext, RpcException } from '@nestjs/microservices';
 
+/**
+ * Tipo genérico para objetos de cualquier tipo
+ * @typedef {Record<string, unknown>} AnyObj
+ */
 type AnyObj = Record<string, unknown>;
 
+/**
+ * Verifica si un valor es un objeto plano (no array ni null)
+ * @param {unknown} v - Valor a verificar
+ * @returns {boolean} True si es un objeto plano
+ * @example
+ * isObj({}) // true
+ * isObj([]) // false
+ * isObj(null) // false
+ */
 function isObj(v: unknown): v is AnyObj {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
 }
 
+/**
+ * Intenta parsear una cadena JSON de forma segura
+ * @param {string} raw - Cadena JSON a parsear
+ * @returns {unknown} Objeto parseado o undefined si hay error
+ * @example
+ * safeJsonParse('{"id": 1}') // { id: 1 }
+ * safeJsonParse('invalid') // undefined
+ */
 function safeJsonParse(raw: string): unknown {
   try {
     return JSON.parse(raw);
@@ -15,15 +36,59 @@ function safeJsonParse(raw: string): unknown {
   }
 }
 
-// Mongo ObjectId típico (24 hex)
+/**
+ * Verifica si un valor es un ID válido de MongoDB (24 caracteres hexadecimales)
+ * @param {unknown} v - Valor a verificar
+ * @returns {boolean} True si es un MongoId válido
+ * @example
+ * isMongoId('507f1f77bcf86cd799439011') // true
+ * isMongoId('invalid') // false
+ */
 function isMongoId(v: unknown): v is string {
   return typeof v === 'string' && /^[a-f\d]{24}$/i.test(v);
 }
 
+/**
+ * Verifica si un valor es un array de strings
+ * @param {unknown} v - Valor a verificar
+ * @returns {boolean} True si es un array de strings válido
+ * @example
+ * isStringArray(['read', 'write']) // true
+ * isStringArray(['read', 1]) // false
+ */
 function isStringArray(v: unknown): v is string[] {
   return Array.isArray(v) && v.every((x) => typeof x === 'string');
 }
 
+
+/**
+ * Objeto de usuario extraído del contexto RMQ
+ * Contiene información de autenticación y autorización del usuario actual
+ *
+ * @typedef {Object} UserFromRmq
+ * @property {string} id - ID único del usuario (MongoDB ObjectId)
+ * @property {string} [name] - Nombre del usuario
+ * @property {string} [lastName] - Apellido del usuario
+ * @property {string} [email] - Correo electrónico del usuario
+ * @property {string} [role] - Rol del usuario (ej: admin, user, moderator)
+ * @property {string[]} [permissions] - Lista de permisos del usuario
+ * @property {string} [organization] - ID de la organización asociada
+ * @property {string} [church] - ID de la iglesia asociada
+ * @property {Object} [organization_info] - Información completa de la organización
+ * @property {string} organization_info.id - ID de la organización
+ * @property {string} [organization_info.name] - Nombre de la organización
+ * @property {string} [organization_info.timezone] - Zona horaria de la organización
+ * @property {string} [organization_info.defaultLanguage] - Idioma por defecto
+ * @property {string} [organization_info.domain] - Dominio de la organización
+ * @property {Object} [church_info] - Información completa de la iglesia
+ * @property {string} church_info.id - ID de la iglesia
+ * @property {string} [church_info.name] - Nombre de la iglesia
+ * @property {string} [church_info.timezone] - Zona horaria de la iglesia
+ * @property {string} [church_info.defaultLanguage] - Idioma por defecto
+ * @property {string} [church_info.domain] - Dominio de la iglesia
+ * @property {string} [createdAt] - Fecha de creación del usuario
+ * @property {string} [updatedAt] - Fecha de última actualización
+ */
 export type UserFromRmq = {
   id: string;
   name?: string;
