@@ -1,98 +1,403 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# MS Service Template NestJS
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Template profesional para construcción de microservicios con **NestJS**. Incluye configuración lista para producción con **Prisma ORM**, **PostgreSQL**, **RabbitMQ** y **Docker**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📋 Tabla de Contenidos
 
-## Description
+- [Características](#características)
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación](#instalación)
+- [Configuración](#configuración)
+- [Ejecución](#ejecución)
+- [Scripts Disponibles](#scripts-disponibles)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Base de Datos](#base-de-datos)
+- [Docker](#docker)
+- [Testing](#testing)
+- [Desarrollo](#desarrollo)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## ✨ Características
 
-## Project setup
+- ✅ **NestJS 11** - Framework moderno y escalable en TypeScript
+- ✅ **Prisma ORM** - Gestión de base de datos type-safe con migraciones automáticas
+- ✅ **PostgreSQL** - Base de datos robusta y fiable
+- ✅ **RabbitMQ** - Sistema de colas para comunicación asíncrona entre servicios
+- ✅ **Docker & Docker Compose** - Despliegue containerizado
+- ✅ **TypeScript** - Tipado estricto para mayor seguridad
+- ✅ **ESLint & Prettier** - Linting y formateo automático
+- ✅ **Jest** - Testing framework integrado
+- ✅ **Decoradores Personalizados** - Utilidades para inyección de usuario
+- ✅ **Interceptores Globales** - Logging y manejo de RPC centralizado
 
-```bash
-$ pnpm install
-```
+## 📦 Requisitos Previos
 
-## Compile and run the project
+Antes de comenzar, asegúrate de tener instalado:
 
-```bash
-# development
-$ pnpm run start
+- **Node.js** >= 20.x
+- **PNPM** >= 9.x (gestor de paquetes recomendado)
+- **Docker** >= 20.x
+- **Docker Compose** >= 2.x
+- **PostgreSQL** 16 (opcional si usas Docker)
+- **RabbitMQ** (opcional si usas Docker)
 
-# watch mode
-$ pnpm run start:dev
+## 🚀 Instalación
 
-# production mode
-$ pnpm run start:prod
-```
-
-## Run tests
+### 1. Clonar el repositorio
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+git clone <tu-repositorio>
+cd ms-nestjs-template
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 2. Instalar dependencias
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+pnpm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Si prefieres usar npm:
 
-## Resources
+```bash
+npm install
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+### 3. Configurar variables de entorno
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Copia el archivo de variables de entorno:
 
-## Support
+```bash
+cp .env.example .env
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Edita el archivo `.env` con tus valores:
 
-## Stay in touch
+```env
+# Base de Datos
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ms_examples
+POSTGRES_DB=ms_examples
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# RabbitMQ
+RABBITMQ_URL=amqp://admin:admin@localhost:5672/
+RABBITMQ_DEFAULT_USER=admin
+RABBITMQ_DEFAULT_PASS=admin
+```
 
-## License
+## ⚙️ Configuración
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Estructura de Configuración
+
+Las configuraciones se encuentran en `src/shared/config/`:
+
+- **envs.ts** - Validación de variables de entorno
+- **rabbitmq.client.config.ts** - Configuración de RabbitMQ
+
+### Validación de Entorno
+
+Las variables de entorno se validan al iniciar la aplicación usando Joi. Si falta alguna variable requerida, el servicio no arrancará.
+
+## 🏃 Ejecución
+
+### Con Docker Compose (Recomendado)
+
+Levanta todos los servicios (PostgreSQL, RabbitMQ, tu aplicación):
+
+```bash
+docker compose up
+```
+
+Para modo detached:
+
+```bash
+docker compose up -d
+```
+
+### Sin Docker
+
+#### Paso 1: Inicia los servicios dependientes
+
+```bash
+pnpm run db:compose:up
+```
+
+Esto inicia PostgreSQL y RabbitMQ en Docker, pero la aplicación corre localmente.
+
+#### Paso 2: Ejecuta el servidor
+
+En modo desarrollo (con watch):
+
+```bash
+pnpm start:dev
+```
+
+En modo producción:
+
+```bash
+pnpm start:prod
+```
+
+En modo debug:
+
+```bash
+pnpm start:debug
+```
+
+## 📝 Scripts Disponibles
+
+| Script | Descripción |
+|--------|-------------|
+| `pnpm start` | Inicia la aplicación en modo normal |
+| `pnpm start:dev` | Inicia en modo desarrollo con auto-reload |
+| `pnpm start:debug` | Inicia en modo debug con inspector |
+| `pnpm start:prod` | Ejecuta la distribución compilada |
+| `pnpm build` | Compila el proyecto a JavaScript |
+| `pnpm lint` | Ejecuta ESLint y corrige problemas |
+| `pnpm format` | Formatea código con Prettier |
+| `pnpm test` | Ejecuta pruebas unitarias |
+| `pnpm test:watch` | Ejecuta pruebas en modo watch |
+| `pnpm test:cov` | Genera reporte de cobertura |
+| `pnpm test:debug` | Ejecuta pruebas en modo debug |
+| `pnpm test:e2e` | Ejecuta pruebas end-to-end |
+| `pnpm prisma:generate` | Genera el cliente de Prisma |
+| `pnpm prisma:migrate` | Ejecuta migraciones pendientes |
+| `pnpm prisma:seed` | Ejecuta el script de seed para datos iniciales |
+| `pnpm db:compose:up` | Levanta servicios (PostgreSQL, RabbitMQ) |
+
+## 🗂️ Estructura del Proyecto
+
+```
+src/
+├── main.ts                          # Punto de entrada de la aplicación
+├── app.module.ts                    # Módulo raíz
+├── shared.module.ts                 # Módulo compartido
+└── shared/
+    ├── config/                      # Configuraciones
+    │   ├── envs.ts                 # Validación de variables de entorno
+    │   └── rabbitmq.client.config.ts  # Configuración de RabbitMQ
+    ├── constants/                   # Constantes de la aplicación
+    │   └── queues.ts               # Nombres de las colas de RabbitMQ
+    ├── decorators/                  # Decoradores personalizados
+    │   ├── user.decorator.ts       # Decorador para obtener usuario en RPC
+    │   └── zod-user.decorator.ts   # Validación con Zod para usuario
+    ├── dto/                         # Data Transfer Objects
+    │   ├── id-query.dto.ts         # DTO para query de ID
+    │   ├── pagination.dto.ts       # DTO para paginación
+    │   └── payload.dto.ts          # DTO base para payloads
+    ├── lib/                         # Librerías y utilidades
+    │   ├── logging.interceptor.ts  # Interceptor para logging
+    │   └── rabbitmq.interceptor.ts # Interceptor para transformar respuestas RPC
+    └── services/                    # Servicios compartidos
+        ├── api-response.service.ts  # Servicio de respuestas estándar
+        ├── prisma.service.ts        # Servicio de Prisma
+        └── rpc.service.ts           # Servicio para comunicación RPC
+
+prisma/
+├── schema.prisma                    # Esquema de base de datos
+└── seed.ts                          # Script para datos iniciales
+
+test/                               # Tests e2e
+```
+
+## 🗄️ Base de Datos
+
+### Prisma ORM
+
+Este proyecto usa **Prisma** como ORM. El esquema se define en `prisma/schema.prisma`.
+
+### Migraciones
+
+#### Crear una nueva migración
+
+Después de cambiar el esquema:
+
+```bash
+pnpm prisma:migrate
+```
+
+Se te pedirá un nombre para la migración. Ej: `add_user_table`
+
+#### Aplicar migraciones
+
+Las migraciones se aplican automáticamente al:
+
+- Iniciar con Docker Compose
+- Ejecutar `pnpm start:dev`
+
+#### Ver estado de migraciones
+
+```bash
+npx prisma migrate status
+```
+
+#### Resetear la base de datos (⚠️ Pérdida de datos)
+
+```bash
+npx prisma migrate reset
+```
+
+### Generar cliente Prisma
+
+```bash
+pnpm prisma:generate
+```
+
+### Seed (Datos Iniciales)
+
+Para poblar la base de datos con datos iniciales, edita `prisma/seed.ts` y ejecuta:
+
+```bash
+pnpm prisma:seed
+```
+
+### Prisma Studio
+
+Interfaz visual para explorar y editar datos:
+
+```bash
+npx prisma studio
+```
+
+Se abrirá en `http://localhost:5555`
+
+## 🐳 Docker
+
+### Archivo docker-compose.yml
+
+Incluye tres servicios:
+
+1. **postgres** - Base de datos PostgreSQL
+2. **rabbitmq** - Broker de mensajes (comentado por defecto)
+3. **app** - La aplicación NestJS
+
+### Comandos Docker
+
+```bash
+# Levantar servicios en background
+docker compose up -d
+
+# Ver logs
+docker compose logs -f app
+
+# Detener servicios
+docker compose down
+
+# Detener y eliminar volúmenes (⚠️ Pérdida de datos)
+docker compose down -v
+
+# Reconstruir imagen
+docker compose build --no-cache
+```
+
+### Variables de Entorno en Docker
+
+Las variables se cargan desde el archivo `.env`. Asegúrate de configurarlas correctamente antes de hacer `docker compose up`.
+
+## 🧪 Testing
+
+### Pruebas Unitarias
+
+```bash
+# Ejecutar una sola vez
+pnpm test
+
+# Modo watch (se ejecutan al guardar cambios)
+pnpm test:watch
+
+# Con cobertura
+pnpm test:cov
+```
+
+### Pruebas End-to-End
+
+```bash
+pnpm test:e2e
+```
+
+Configuradas en `test/jest-e2e.json`.
+
+## 👨‍💻 Desarrollo
+
+### Estructura de un Módulo
+
+```typescript
+import { Module } from '@nestjs/common';
+import { ExampleController } from './example.controller';
+import { ExampleService } from './example.service';
+
+@Module({
+  imports: [],
+  controllers: [ExampleController],
+  providers: [ExampleService],
+})
+export class ExampleModule {}
+```
+
+### Inyección de Dependencias
+
+NestJS usa inyección de dependencias automáticamente:
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../shared/services/prisma.service';
+
+@Injectable()
+export class ExampleService {
+  constructor(private prisma: PrismaService) {}
+
+  async findAll() {
+    return this.prisma.user.findMany();
+  }
+}
+```
+
+### Comunicación RPC
+
+Para comunicar con otros servicios a través de RabbitMQ:
+
+```typescript
+import { Controller, MessagePattern, Payload } from '@nestjs/common';
+import { RpcService } from '../shared/services/rpc.service';
+
+@Controller()
+export class ExampleController {
+  constructor(
+    private readonly exampleService: ExampleService,
+    private readonly rpc: RpcService,
+  ) {}
+
+  @MessagePattern('example.get')
+  async getExample(@Payload() data: any) {
+    return this.exampleService.findOne(data.id);
+  }
+}
+```
+
+### Formateo y Linting
+
+```bash
+# Linting automático
+pnpm lint
+
+# Formateo con Prettier
+pnpm format
+```
+
+## 📚 Recursos Útiles
+
+- [Documentación NestJS](https://docs.nestjs.com)
+- [Documentación Prisma](https://www.prisma.io/docs/)
+- [Documentación RabbitMQ](https://www.rabbitmq.com/documentation.html)
+- [Documentación PostgreSQL](https://www.postgresql.org/docs/)
+
+## 📄 Licencia
+
+UNLICENSED
+
+## 👤 Autor
+
+Creado como template para proyectos de microservicios.
+
+---
+
+**¿Necesitas ayuda?** Revisa los logs de Docker o ejecuta `pnpm start:debug` para más detalles.
