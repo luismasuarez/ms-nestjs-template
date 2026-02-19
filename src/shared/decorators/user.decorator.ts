@@ -104,6 +104,30 @@ export type UserFromRmq = {
   updatedAt?: string;
 };
 
+/**
+ * Valida y sanitiza un objeto de usuario desde el contexto RMQ
+ *
+ * Realiza las siguientes validaciones:
+ * - El usuario debe ser un objeto plano
+ * - El ID debe ser un MongoId válido (24 caracteres hex)
+ * - Email, si se proporciona, debe ser una cadena
+ * - Permisos, si se proporciona, debe ser un array de strings
+ * - Organization ID, si se proporciona, debe ser un MongoId válido
+ * - Church ID, si se proporciona, debe ser un MongoId válido
+ * - organization_info debe tener un ID válido si se proporciona
+ * - church_info debe tener un ID válido si se proporciona
+ *
+ * @param {unknown} user - Objeto de usuario a validar
+ * @returns {UserFromRmq} Usuario validado y tipado
+ * @throws {RpcException} Si cualquier validación falla
+ *
+ * @example
+ * const user = validateUser({
+ *   id: '507f1f77bcf86cd799439011',
+ *   email: 'user@example.com',
+ *   permissions: ['read', 'write']
+ * });
+ */
 function validateUser(user: unknown): UserFromRmq {
   if (!isObj(user)) {
     throw new RpcException({ code: 'MISSING_USER', message: 'payload.user is required and must be an object.' });
@@ -152,6 +176,41 @@ function validateUser(user: unknown): UserFromRmq {
   return user as UserFromRmq;
 }
 
+/**
+ * Decorador para inyectar información del usuario en manejadores RPC
+ *
+ * Extrae y valida los datos del usuario desde el mensaje RMQ.
+ * El mensaje debe contener un payload JSON con un objeto `user` válido.
+ *
+ * @param {keyof UserFromRmq | undefined} [field] - Campo específico a extraer del usuario
+ *                                                   Si no se proporciona, devuelve el usuario completo
+ * @param {ExecutionContext} ctx - Contexto de ejecución de NestJS
+ *
+ * @returns {UserFromRmq | unknown} Objeto de usuario completo o valor del campo especificado
+ *
+ * @throws {RpcException} Si el mensaje está vacío, JSON inválido o usuario inválido
+ *
+ * @example
+ * // Obtener usuario completo
+ * @MessagePattern('users.get')
+ * getUser(@UserPayload() user: UserFromRmq) {
+ *   return user;
+ * }
+ *
+ * @example
+ * // Obtener un campo específico del usuario
+ * @MessagePattern('users.email')
+ * getUserEmail(@UserPayload('email') email: string) {
+ *   return email;
+ * }
+ *
+ * @example
+ * // Con validación Zod (usa @ZodUserPayload en su lugar)
+ * @MessagePattern('users.validated')
+ * getValidatedUser(@ZodUserPayload() user: UserFromRmq) {
+ *   return user;
+ * }
+ */
 export const UserPayload = createParamDecorator(
   (field: keyof UserFromRmq | undefined, ctx: ExecutionContext) => {
     const cctx = ctx.switchToRpc().getContext<RmqContext>();
