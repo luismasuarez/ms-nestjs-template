@@ -19,11 +19,11 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        DATABASE_URL: ${POSTGRES_DB_URL}
+        DATABASE_URL: ${DATABASE_URL}
         RABBITMQ_URL: ${RABBITMQ_URL}
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${POSTGRES_DB_URL}
+      DATABASE_URL: ${DATABASE_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
     depends_on:
