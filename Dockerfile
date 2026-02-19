@@ -45,8 +45,7 @@ WORKDIR /app
 # Copy node_modules and dist from builder
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./src/shared/prisma
-COPY --from=builder /app/generated ./src/shared/prisma/generated
+COPY --from=builder /app/src/shared/prisma ./src/shared/prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY package.json ./
 
