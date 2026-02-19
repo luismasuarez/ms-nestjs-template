@@ -49,7 +49,6 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY package.json ./
-COPY docker-entrypoint.sh ./
 
 # Change ownership and make entrypoint executable
 RUN chown -R nestjs:nodejs /app && chmod +x /app/docker-entrypoint.sh
