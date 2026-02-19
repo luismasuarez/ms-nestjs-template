@@ -25,12 +25,15 @@ services:
     environment:
       DATABASE_URL: ${POSTGRES_DB_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
     depends_on:
       postgres:
         condition: service_healthy
     command: >
       sh -c "
-      npx prisma migrate deploy &&
+      if [ \"$RUN_MIGRATIONS\" = \"true\" ]; then
+        npx prisma migrate deploy &&
+      fi
       node dist/src/main
       "
 
