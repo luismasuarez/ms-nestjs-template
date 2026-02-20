@@ -47,7 +47,7 @@ export class MinioService implements OnModuleInit {
    */
   private async checkMinIOConnection(): Promise<boolean> {
     try {
-      this.logger.log(`🔌 Intentando conectar a MinIO en ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}...`);
+      this.logger.log(`Intentando conectar a MinIO en ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}...`);
 
       // Intentar listar buckets con timeout
       await Promise.race([
@@ -57,11 +57,11 @@ export class MinioService implements OnModuleInit {
         ),
       ]);
 
-      this.logger.log(`✅ Conexión exitosa a MinIO en ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}`);
+      this.logger.log(`Conexión exitosa a MinIO en ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}`);
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.warn("⚠️  MinIO no está disponible:", errorMessage);
+      this.logger.warn(`MinIO no está disponible: ${errorMessage}`);
       this.logger.warn(`   Endpoint configurado: ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}`);
       this.logger.warn(`   SSL: ${this.MINIO_USE_SSL}`);
       this.logger.warn(`   Access Key: ${this.MINIO_ACCESS_KEY ? '***configurado***' : 'NO CONFIGURADO'}`);
@@ -78,7 +78,7 @@ export class MinioService implements OnModuleInit {
       const isConnected = await this.checkMinIOConnection();
       if (!isConnected) {
         this.minioAvailable = false;
-        this.logger.warn("⚠️  MinIO no está disponible. Las funciones de almacenamiento de archivos no estarán disponibles.");
+        this.logger.warn("MinIO no está disponible. Las funciones de almacenamiento de archivos no estarán disponibles.");
         return;
       }
 
@@ -90,10 +90,10 @@ export class MinioService implements OnModuleInit {
       // Verificar y crear bucket de eventos
       await this.ensureBucketExists(this.EVENTS_BUCKET);
 
-      this.logger.log("✅ MinIO buckets inicializados correctamente");
+      this.logger.log("MinIO buckets inicializados correctamente");
     } catch (error) {
       this.minioAvailable = false;
-      this.logger.error("❌ Error initializing MinIO buckets:", error);
+      this.logger.error("Error initializing MinIO buckets:", error);
       // No lanzar el error, solo loggear
       // Esto permite que la aplicación continúe funcionando sin MinIO
     }
@@ -106,7 +106,7 @@ export class MinioService implements OnModuleInit {
     const exists = await this.minioClient.bucketExists(bucketName);
     if (!exists) {
       await this.minioClient.makeBucket(bucketName, "us-east-1");
-      this.logger.log(`✅ Bucket creado: ${bucketName}`);
+      this.logger.log(`Bucket creado: ${bucketName}`);
 
       // Configurar política pública para lectura
       try {
@@ -125,7 +125,7 @@ export class MinioService implements OnModuleInit {
           })
         );
       } catch (policyError) {
-        this.logger.warn(`⚠️  No se pudo configurar la política del bucket ${bucketName}:`, policyError);
+        this.logger.warn(`No se pudo configurar la política del bucket ${bucketName}:`, policyError);
       }
     }
   }
