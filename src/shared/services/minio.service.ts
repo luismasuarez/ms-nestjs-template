@@ -1,131 +1,327 @@
-import { CreateBucketCommand, DeleteObjectCommand, PutBucketPolicyCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { HttpException, HttpStatus, Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { createReadStream } from "fs";
+import * as Minio from "minio";
 
 @Injectable()
 export class MinioService implements OnModuleInit {
-  private logger = new Logger(MinioService.name);
-  private s3: S3Client;
+  private readonly logger = new Logger(MinioService.name);
+  private minioClient: Minio.Client;
+  private minioAvailable = false;
 
-  constructor(private configService: ConfigService) { }
+  private readonly STATIC_BUCKET: string;
+  private readonly EVENTS_BUCKET: string;
+  private readonly MINIO_ENDPOINT: string;
+  private readonly MINIO_PORT: number;
+  private readonly MINIO_USE_SSL: boolean;
+  private readonly MINIO_ACCESS_KEY: string;
+  private readonly MINIO_SECRET_KEY: string;
+
+  constructor(private readonly configService: ConfigService) {
+    // Configuración de MinIO desde variables de entorno
+    this.MINIO_ENDPOINT = this.configService.get<string>('MINIO_ENDPOINT', 'localhost');
+    this.MINIO_PORT = this.configService.get<number>('MINIO_PORT', 9000);
+    this.MINIO_USE_SSL = this.configService.get<string>('MINIO_USE_SSL') === 'true';
+    this.MINIO_ACCESS_KEY = this.configService.get<string>('MINIO_ACCESS_KEY') ||
+                            this.configService.get<string>('MINIO_ROOT_USER', 'minioadmin');
+    this.MINIO_SECRET_KEY = this.configService.get<string>('MINIO_SECRET_KEY') ||
+                            this.configService.get<string>('MINIO_ROOT_PASSWORD', 'minioadmin');
+
+    // Buckets configurables
+    this.STATIC_BUCKET = this.configService.get<string>('MINIO_STATIC_BUCKET', 'static-files');
+    this.EVENTS_BUCKET = this.configService.get<string>('MINIO_EVENTS_BUCKET', 'events');
+
+    // Inicializar cliente MinIO
+    this.minioClient = new Minio.Client({
+      endPoint: this.MINIO_ENDPOINT,
+      port: this.MINIO_PORT,
+      useSSL: this.MINIO_USE_SSL,
+      accessKey: this.MINIO_ACCESS_KEY,
+      secretKey: this.MINIO_SECRET_KEY,
+    });
+  }
 
   async onModuleInit() {
-    try {
-      const minioUrl = this.configService.get<string>('MINIO_URL');
-      const accessKeyId = this.configService.get<string>('MINIO_ACCESS_KEY');
-      const secretAccessKey = this.configService.get<string>('MINIO_SECRET_KEY');
+    await this.initializeBuckets();
+  }
 
-      if (!minioUrl || !accessKeyId || !secretAccessKey) {
-        this.logger.warn('MinIO configuration is incomplete. Skipping initialization.');
-        this.logger.warn('Required: MINIO_URL, MINIO_ACCESS_KEY, MINIO_SECRET_KEY');
+  /**
+   * Verificar conexión a MinIO
+   */
+  private async checkMinIOConnection(): Promise<boolean> {
+    try {
+      this.logger.log(`🔌 Intentando conectar a MinIO en ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}...`);
+
+      // Intentar listar buckets con timeout
+      await Promise.race([
+        this.minioClient.listBuckets(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("MinIO connection timeout")), 5000)
+        ),
+      ]);
+
+      this.logger.log(`✅ Conexión exitosa a MinIO en ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}`);
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.warn("⚠️  MinIO no está disponible:", errorMessage);
+      this.logger.warn(`   Endpoint configurado: ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}`);
+      this.logger.warn(`   SSL: ${this.MINIO_USE_SSL}`);
+      this.logger.warn(`   Access Key: ${this.MINIO_ACCESS_KEY ? '***configurado***' : 'NO CONFIGURADO'}`);
+      this.logger.warn(`   Secret Key: ${this.MINIO_SECRET_KEY ? '***configurado***' : 'NO CONFIGURADO'}`);
+      return false;
+    }
+  }
+
+  /**
+   * Inicializar buckets si no existen (no falla si MinIO no está disponible)
+   */
+  async initializeBuckets(): Promise<void> {
+    try {
+      const isConnected = await this.checkMinIOConnection();
+      if (!isConnected) {
+        this.minioAvailable = false;
+        this.logger.warn("⚠️  MinIO no está disponible. Las funciones de almacenamiento de archivos no estarán disponibles.");
         return;
       }
 
-      this.logger.log(`Connecting to MinIO at ${minioUrl}`);
+      this.minioAvailable = true;
 
-      this.s3 = new S3Client({
-        region: 'us-east-1',
-        endpoint: minioUrl,
-        credentials: {
-          accessKeyId,
-          secretAccessKey,
-        },
-        forcePathStyle: true,
-      });
+      // Verificar y crear bucket de archivos estáticos
+      await this.ensureBucketExists(this.STATIC_BUCKET);
 
-      await this.createBucketIfNotExists('my-public-bucket');
-      await this.makeBucketPublic('my-public-bucket');
+      // Verificar y crear bucket de eventos
+      await this.ensureBucketExists(this.EVENTS_BUCKET);
 
-      this.logger.log('MinIO service initialized successfully');
+      this.logger.log("✅ MinIO buckets inicializados correctamente");
     } catch (error) {
-      this.logger.error('Failed to initialize MinIO service:', error.message);
-      this.logger.error('Please check your MinIO configuration (URL, credentials, and network connectivity)');
-      this.logger.warn('Application will continue without MinIO functionality');
+      this.minioAvailable = false;
+      this.logger.error("❌ Error initializing MinIO buckets:", error);
+      // No lanzar el error, solo loggear
+      // Esto permite que la aplicación continúe funcionando sin MinIO
     }
   }
 
-  async createBucketIfNotExists(bucketName: string) {
-    try {
-      await this.s3.send(new CreateBucketCommand({ Bucket: bucketName }));
-      this.logger.log(`Bucket '${bucketName}' created successfully`);
-    } catch (err) {
-      if (err?.name === 'BucketAlreadyOwnedByYou' || err?.name === 'BucketAlreadyExists') {
-        this.logger.log(`Bucket '${bucketName}' already exists`);
-      } else {
-        this.logger.error(`Error creating bucket '${bucketName}':`, err.message);
-        throw err;
+  /**
+   * Asegurar que un bucket exista y tenga política pública
+   */
+  private async ensureBucketExists(bucketName: string): Promise<void> {
+    const exists = await this.minioClient.bucketExists(bucketName);
+    if (!exists) {
+      await this.minioClient.makeBucket(bucketName, "us-east-1");
+      this.logger.log(`✅ Bucket creado: ${bucketName}`);
+
+      // Configurar política pública para lectura
+      try {
+        await this.minioClient.setBucketPolicy(
+          bucketName,
+          JSON.stringify({
+            Version: "2012-10-17",
+            Statement: [
+              {
+                Effect: "Allow",
+                Principal: { AWS: ["*"] },
+                Action: ["s3:GetObject"],
+                Resource: [`arn:aws:s3:::${bucketName}/*`],
+              },
+            ],
+          })
+        );
+      } catch (policyError) {
+        this.logger.warn(`⚠️  No se pudo configurar la política del bucket ${bucketName}:`, policyError);
       }
     }
   }
 
-  async makeBucketPublic(bucketName: string) {
-    const policy = {
-      Version: '2012-10-17',
-      Statement: [
-        {
-          Sid: 'PublicRead',
-          Effect: 'Allow',
-          Principal: '*',
-          Action: ['s3:GetObject'],
-          Resource: [`arn:aws:s3:::${bucketName}/*`],
-        },
-      ],
-    };
+  /**
+   * Obtener URL pública de un archivo
+   * Usa ruta relativa para que funcione desde cualquier origen (localhost, traefik, etc.)
+   */
+  getFileUrl(bucket: string, objectName: string): string {
+    // Ruta relativa: se resuelve al origen actual, evita problemas con BASE_URL
+    return `/api/files/${bucket}/${objectName}`;
+  }
 
-    const command = new PutBucketPolicyCommand({
-      Bucket: bucketName,
-      Policy: JSON.stringify(policy),
-    });
+  /**
+   * Subir archivo a MinIO
+   */
+  async uploadFile(
+    bucket: string,
+    objectName: string,
+    fileBuffer: Buffer,
+    contentType: string
+  ): Promise<string> {
+    // Verificar si MinIO está disponible
+    if (!this.minioAvailable) {
+      const isConnected = await this.checkMinIOConnection();
+      if (!isConnected) {
+        throw new Error(
+          `MinIO no está disponible. Verifica que el servicio esté corriendo en ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}`
+        );
+      }
+      this.minioAvailable = true;
+    }
 
     try {
-      await this.s3.send(command);
-      this.logger.log(`Bucket '${bucketName}' is now public`);
-    } catch (err) {
-      this.logger.error(`Error setting bucket policy for '${bucketName}':`, err.message);
-      throw err;
+      // Intentar con timeout
+      await Promise.race([
+        this.minioClient.putObject(bucket, objectName, fileBuffer, fileBuffer.length, {
+          "Content-Type": contentType,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("MinIO upload timeout")), 30000)
+        ),
+      ]);
+      return this.getFileUrl(bucket, objectName);
+    } catch (error) {
+      this.minioAvailable = false; // Marcar como no disponible en caso de error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error uploading file to MinIO (${this.MINIO_ENDPOINT}:${this.MINIO_PORT}):`, errorMessage);
+
+      // Proporcionar mensaje de error más útil
+      if (errorMessage.includes("ECONNRESET") || errorMessage.includes("ECONNREFUSED")) {
+        throw new Error(
+          `No se pudo conectar a MinIO en ${this.MINIO_ENDPOINT}:${this.MINIO_PORT}. Verifica que el servicio esté corriendo y accesible.`
+        );
+      }
+
+      throw error;
     }
   }
 
-  async uploadFile(filePath: any) {
+  /**
+   * Eliminar archivo de MinIO
+   */
+  async deleteFile(bucket: string, objectName: string): Promise<void> {
     try {
-      const fileContent = createReadStream(filePath.path);
-
-      const command = new PutObjectCommand({
-        Bucket: "my-public-bucket",
-        Key: filePath.filename,
-        Body: fileContent,
-        ContentType: filePath.mimetype,
-
-      });
-
-      await this.s3.send(command);
-
-      const publicUrl = `${this.configService.get('MINIO_URL')}/my-public-bucket/${filePath.filename}`;
-      this.logger.log(`File uploaded successfully: ${filePath.filename}`);
-
-      return publicUrl;
-    } catch (err) {
-      this.logger.error('Error uploading file:', err.message);
-      throw new HttpException('Failed to upload file', HttpStatus.INTERNAL_SERVER_ERROR);
+      await this.minioClient.removeObject(bucket, objectName);
+    } catch (error) {
+      this.logger.error("Error deleting file from MinIO:", error);
+      throw error;
     }
   }
 
-  async deleteService(fileName: string) {
-    if (!fileName || typeof fileName !== 'string') {
-      throw new HttpException('Invalid file name', HttpStatus.BAD_REQUEST);
-    }
+  /**
+   * Obtener archivo de MinIO
+   */
+  async getFile(bucket: string, objectName: string): Promise<Buffer> {
     try {
-      const command = new DeleteObjectCommand({
-        Bucket: "my-public-bucket",
-        Key: fileName,
+      const dataStream = await this.minioClient.getObject(bucket, objectName);
+      const chunks: Buffer[] = [];
+
+      return new Promise((resolve, reject) => {
+        dataStream.on("data", (chunk) => chunks.push(chunk));
+        dataStream.on("end", () => resolve(Buffer.concat(chunks)));
+        dataStream.on("error", reject);
       });
-      await this.s3.send(command);
-      this.logger.log(`File deleted successfully: ${fileName}`);
-      return true;
-    } catch (err) {
-      this.logger.error(`Error deleting file '${fileName}':`, err.message);
-      throw new HttpException('Cannot delete file', HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch (error) {
+      this.logger.error("Error getting file from MinIO:", error);
+      throw error;
     }
+  }
+
+  /**
+   * Subir material de evento
+   */
+  async uploadEventMaterial(
+    eventId: string,
+    fileName: string,
+    fileBuffer: Buffer,
+    contentType: string
+  ): Promise<string> {
+    const objectName = `events/${eventId}/materials/${Date.now()}-${fileName}`;
+    return this.uploadFile(this.EVENTS_BUCKET, objectName, fileBuffer, contentType);
+  }
+
+  /**
+   * Eliminar material de evento
+   */
+  async deleteEventMaterial(eventId: string, fileUrl: string): Promise<void> {
+    const apiFilesMatch = fileUrl.match(/\/api\/files\/events\/(.+)$/);
+
+    if (!apiFilesMatch || !apiFilesMatch[1]) {
+      throw new Error(`URL inválida para eliminar material: ${fileUrl}. Se espera formato /api/files/events/...`);
+    }
+
+    const objectName = apiFilesMatch[1];
+    await this.deleteFile(this.EVENTS_BUCKET, objectName);
+  }
+
+  /**
+   * Subir archivo estático general
+   */
+  async uploadStaticFile(
+    folder: string,
+    fileName: string,
+    fileBuffer: Buffer,
+    contentType: string
+  ): Promise<string> {
+    const objectName = `${folder}/${Date.now()}-${fileName}`;
+    return this.uploadFile(this.STATIC_BUCKET, objectName, fileBuffer, contentType);
+  }
+
+  /**
+   * Subir imagen de perfil
+   */
+  async uploadProfileImage(
+    userId: string,
+    fileName: string,
+    fileBuffer: Buffer,
+    contentType: string
+  ): Promise<string> {
+    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const objectName = `profiles/${userId}/${Date.now()}-${sanitizedFileName}`;
+    return this.uploadFile(this.STATIC_BUCKET, objectName, fileBuffer, contentType);
+  }
+
+  /**
+   * Extraer el nombre del objeto desde una URL de MinIO
+   */
+  extractObjectNameFromUrl(fileUrl: string, bucket: string): string | null {
+    // Formato esperado: http://host:port/api/files/static-files/profiles/user/file.jpg
+    // o: /api/files/static-files/profiles/user/file.jpg
+    const apiFilesMatch = fileUrl.match(/\/api\/files\/[^/]+\/(.+)$/);
+
+    if (apiFilesMatch && apiFilesMatch[1]) {
+      // Remover query params si existen
+      return apiFilesMatch[1].split('?')[0];
+    }
+
+    // Intentar con formato directo del bucket
+    const bucketMatch = fileUrl.match(new RegExp(`/${bucket}/(.+)$`));
+    if (bucketMatch && bucketMatch[1]) {
+      return bucketMatch[1].split('?')[0];
+    }
+
+    return null;
+  }
+
+  /**
+   * Eliminar imagen de perfil desde URL
+   */
+  async deleteProfileImage(fileUrl: string): Promise<void> {
+    const objectName = this.extractObjectNameFromUrl(fileUrl, this.STATIC_BUCKET);
+    if (!objectName) {
+      throw new Error(`URL inválida para eliminar imagen de perfil: ${fileUrl}`);
+    }
+    await this.deleteFile(this.STATIC_BUCKET, objectName);
+  }
+
+  /**
+   * Getters para acceder a propiedades del servicio
+   */
+  getStaticBucket(): string {
+    return this.STATIC_BUCKET;
+  }
+
+  getEventsBucket(): string {
+    return this.EVENTS_BUCKET;
+  }
+
+  isAvailable(): boolean {
+    return this.minioAvailable;
+  }
+
+  getClient(): Minio.Client {
+    return this.minioClient;
   }
 }
