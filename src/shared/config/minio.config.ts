@@ -1,3 +1,5 @@
+import { Logger } from "@nestjs/common";
+
 export interface MinioConfig {
   endpoint: string;
   port: number;
@@ -9,6 +11,7 @@ export interface MinioConfig {
 }
 
 export const getMinioConfig = (): MinioConfig => {
+  const logger = new Logger('MinioConfig');
   const minioUrl = process.env.MINIO_URL;
 
   let endpoint = 'localhost';
@@ -17,12 +20,14 @@ export const getMinioConfig = (): MinioConfig => {
 
   if (minioUrl) {
     try {
+      logger.log(`Parsing MINIO_URL: ${minioUrl}`);
+
       const url = new URL(minioUrl);
       endpoint = url.hostname;
       port = url.port ? parseInt(url.port) : (url.protocol === 'https:' ? 443 : 9000);
       useSSL = url.protocol === 'https:';
     } catch (error) {
-      console.warn('Invalid MINIO_URL, using default localhost configuration');
+      logger.warn('Invalid MINIO_URL, using default localhost configuration');
     }
   } else {
     // Fallback a configuración tradicional
