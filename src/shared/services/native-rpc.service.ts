@@ -1,10 +1,11 @@
 import { ExecutionContext, Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy, ClientProxyFactory, RmqContext } from '@nestjs/microservices';
-import { Channel } from 'amqplib';
+import { Channel, connect, Connection } from 'amqplib';
 import { firstValueFrom } from 'rxjs';
 import { rabbitMqClientConfig } from '../config/rabbitmq.client.config';
 import { Queues } from '../constants/queues';
+import { randomUUID } from 'crypto';
 
 export interface RpcContext {
   channel: Channel;
@@ -21,6 +22,78 @@ export class NativeRpcService implements OnModuleDestroy {
     this.client = ClientProxyFactory.create(
       rabbitMqClientConfig({ queue }) as any,
     );
+  }
+
+  /**
+   * Envía un mensaje RPC directamente a una cola RabbitMQ y espera la respuesta.
+   * Esta implementación no pasa por el gateway, conecta directamente a RabbitMQ.
+   * @param data Mensaje a enviar
+   * @param queue Cola destino
+   * @param timeoutMs Tiempo antes de timeout en ms (por defecto 60000)
+   */
+  async produceRpc<T = any>(data: any, queue: string, timeoutMs = 60000): Promise<T> {
+    const amqpUrl =
+      this.config.get<string>('RABBITMQ_URL') || this.config.get<string>('RABBITMQ') || 'amqp://localhost';
+
+    let connection: Connection | undefined;
+    let channel: Channel | undefined;
+
+    try {
+      connection = await connect(amqpUrl);
+      channel = await connection.createChannel();
+
+      const { queue: replyQueue } = await channel.assertQueue('', { exclusive: true });
+      const correlationId = randomUUID();
+
+      channel.sendToQueue(queue, Buffer.from(JSON.stringify(data)), {
+        replyTo: replyQueue,
+        correlationId,
+        expiration: String(timeoutMs),
+        headers: { function: data?.operation },
+      });
+
+      return await new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          cleanup().catch(() => {});
+          reject(new Error('RPC timeout'));
+        }, timeoutMs);
+
+        channel!.consume(
+          replyQueue,
+          (msg) => {
+            if (!msg) return;
+            if (msg.properties.correlationId !== correlationId) return;
+            clearTimeout(timer);
+            try {
+              const parsed = JSON.parse(msg.content.toString());
+              cleanup().catch(() => {});
+              resolve(parsed as T);
+            } catch (err) {
+              cleanup().catch(() => {});
+              reject(err);
+            }
+          },
+          { noAck: true },
+        );
+
+        async function cleanup() {
+          try {
+            await channel!.close();
+          } catch {}
+          try {
+            await connection!.close();
+          } catch {}
+        }
+      });
+    } catch (error) {
+      try {
+        if (channel) await channel.close();
+      } catch {}
+      try {
+        if (connection) await connection.close();
+      } catch {}
+      throw error;
+    }
   }
 
   async call<T = any>(pattern: string | object, payload: any): Promise<T> {
