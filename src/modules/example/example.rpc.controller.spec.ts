@@ -10,7 +10,7 @@ describe('ExampleRpcController', () => {
     const controller = new MembersExampleRpcController(nativeRpcService as any);
     const user = { church: 'church-1' } as UserFromRmq;
 
-    const response = await controller.handleMembersExample(
+    const response = await controller.handleTestPattern(
       { memberId: 'member-1' },
       user,
     );
@@ -36,7 +36,7 @@ describe('ExampleRpcController', () => {
     const controller = new MembersExampleRpcController(nativeRpcService as any);
     const user = { church: 'church-1' } as UserFromRmq;
 
-    const response = await controller.handleMembersExample({}, user);
+    const response = await controller.handleTestPattern({}, user);
 
     expect(nativeRpcService.produceRpc).toHaveBeenCalledWith(
       {

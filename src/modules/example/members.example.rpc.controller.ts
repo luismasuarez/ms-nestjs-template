@@ -10,7 +10,7 @@ export class MembersExampleRpcController {
   constructor(private readonly nativeRpcService: NativeRpcService) {}
 
   @MessagePattern('example.members')
-  async handleMembersExample(@Payload() data: any, @UserPayload() user: UserFromRmq) {
+  async handleTestPattern(@Payload() data: any, @UserPayload() user: UserFromRmq) {
     const church = user?.church;
     const memberId = data?.memberId;
 
