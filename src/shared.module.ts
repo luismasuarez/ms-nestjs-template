@@ -4,6 +4,7 @@ import { HealthRpcController } from './modules/health/health.rpc.controller';
 import { LoggingInterceptor } from './shared/lib/logging.interceptor';
 import { RabbitMQInterceptor } from './shared/lib/rabbitmq.interceptor';
 import { RpcErrorInterceptor } from './shared/lib/rpc-error.interceptor';
+import { MinioService } from './shared/services/minio.service';
 import { NativeRpcService } from './shared/services/native-rpc.service';
 import { PrismaService } from './shared/services/prisma.service';
 import { ResponseService } from './shared/services/response.service';
@@ -15,6 +16,7 @@ import { ResponseService } from './shared/services/response.service';
     PrismaService,
     ResponseService,
     NativeRpcService,
+    MinioService,
     LoggingInterceptor,
     RabbitMQInterceptor,
     RpcErrorInterceptor,
@@ -23,6 +25,7 @@ import { ResponseService } from './shared/services/response.service';
     PrismaService,
     ResponseService,
     NativeRpcService,
+    MinioService,
     LoggingInterceptor,
     RabbitMQInterceptor,
     RpcErrorInterceptor,
