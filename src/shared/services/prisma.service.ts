@@ -5,19 +5,17 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { envs } from '../../shared/config/envs';
 import { PrismaClient } from '../prisma/generated/prisma/client';
 
 @Injectable()
 export class PrismaService
   extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
+  implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
     const adapter = new PrismaPg({
-      connectionString: envs.DATABASE_URL,
+      connectionString: process.env.DATABASE_URL,
     });
     super({ adapter });
   }
