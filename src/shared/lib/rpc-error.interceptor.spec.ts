@@ -66,6 +66,40 @@ describe('RpcErrorInterceptor', () => {
     expect(payload.error?.details).toEqual(['name is required']);
   });
 
+  it('normalizes validation errors when message is a string', async () => {
+    const err = await run({ response: { message: 'invalid email' } });
+    const payload = (err as RpcException).getError() as Response;
+
+    expect(payload.status).toBe('error');
+    expect(payload.error?.code).toBe(ErrorCodes.Validation);
+    expect(payload.error?.message).toBe('Validation failed');
+    expect(payload.error?.details).toEqual(['invalid email']);
+  });
+
+  it('normalizes RpcException when payload looks like Response but is not error', async () => {
+    const err = await run(
+      new RpcException({ status: 'success', data: { ok: true } }),
+    );
+    const payload = (err as RpcException).getError() as Response;
+
+    expect(payload.status).toBe('error');
+    expect(payload.error?.code).toBe(ErrorCodes.Rpc);
+    expect(payload.error?.message).toBe('RPC error');
+    expect(payload.error?.details).toEqual({ status: 'success', data: { ok: true } });
+  });
+
+  it('normalizes RpcException when message is not a string', async () => {
+    const err = await run(
+      new RpcException({ code: 'CUSTOM', message: ['not', 'string'] }),
+    );
+    const payload = (err as RpcException).getError() as Response;
+
+    expect(payload.status).toBe('error');
+    expect(payload.error?.code).toBe('CUSTOM');
+    expect(payload.error?.message).toBe('RPC error');
+    expect(payload.error?.details).toEqual({ code: 'CUSTOM', message: ['not', 'string'] });
+  });
+
   it('normalizes unknown errors', async () => {
     const err = await run(new Error('Unexpected'));
     const payload = (err as RpcException).getError() as Response;

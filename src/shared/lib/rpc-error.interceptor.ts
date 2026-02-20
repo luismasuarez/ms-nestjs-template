@@ -54,7 +54,10 @@ export class RpcErrorInterceptor implements NestInterceptor {
     }
 
     if (this.isValidationError(error)) {
-      return this.responseService.validationError(error.response.message);
+      const details = Array.isArray(error.response.message)
+        ? error.response.message
+        : [error.response.message];
+      return this.responseService.validationError(details);
     }
 
     const unknownError = error as { message?: string; code?: string } | null;
@@ -80,13 +83,13 @@ export class RpcErrorInterceptor implements NestInterceptor {
 
   private isValidationError(
     error: unknown,
-  ): error is { response: { message: unknown[] } } {
+  ): error is { response: { message: unknown[] | unknown } } {
     if (typeof error !== 'object' || error === null) {
       return false;
     }
 
     const maybeError = error as { response?: { message?: unknown } };
 
-    return Array.isArray(maybeError.response?.message);
+    return typeof maybeError.response?.message !== 'undefined';
   }
 }
