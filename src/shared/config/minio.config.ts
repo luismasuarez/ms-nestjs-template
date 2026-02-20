@@ -16,7 +16,6 @@ export const getMinioConfig = (): MinioConfig => {
   let useSSL = false;
 
   if (minioUrl) {
-    // Parsear MINIO_URL (ej: https://minio-api.steampunker.xyz o http://localhost:9000)
     try {
       const url = new URL(minioUrl);
       endpoint = url.hostname;
