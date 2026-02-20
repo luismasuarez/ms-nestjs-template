@@ -1,3 +1,3 @@
 export enum Queues {
-  EXAMPLE_QUEUE = 'example_queue',
+  DEFAULT = 'default_queue',
 }

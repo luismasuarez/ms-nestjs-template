@@ -10,7 +10,7 @@ async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {
-      ...rabbitMqClientConfig({ queue: Queues.EXAMPLE_QUEUE }),
+      ...rabbitMqClientConfig({ queue: Queues.DEFAULT }),
     },
   );
 

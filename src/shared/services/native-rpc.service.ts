@@ -17,7 +17,7 @@ export class NativeRpcService implements OnModuleDestroy {
 
   constructor() {
     this.client = ClientProxyFactory.create(
-      rabbitMqClientConfig({ queue: Queues.EXAMPLE_QUEUE }) as any,
+      rabbitMqClientConfig({ queue: Queues.DEFAULT }) as any,
     );
   }
 
