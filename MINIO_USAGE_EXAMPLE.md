@@ -11,6 +11,14 @@ MINIO_ACCESS_KEY=admin
 MINIO_SECRET_KEY=admin1234
 ```
 
+### ⚠️ Importante: Puerto de MinIO
+
+MinIO usa **dos puertos diferentes**:
+- **Puerto 9000**: API de S3 (usa este para `MINIO_URL`)
+- **Puerto 9001**: Consola web (para administración)
+
+**Asegúrate de usar el puerto 9000 en la variable `MINIO_URL`.**
+
 ### Para desarrollo local con Docker Compose
 
 Si usas MinIO con Docker, agrega esto a tu `docker-compose.local-services.yml`:
@@ -32,6 +40,26 @@ minio:
 volumes:
   minio_data:
 ```
+
+### Para MinIO en Dokploy u otro servidor externo
+
+Si tienes MinIO desplegado en Dokploy, configura así:
+
+```env
+# Usa la URL pública de tu MinIO (puerto 9000, NO 9001)
+MINIO_URL=https://tu-dominio-minio.com
+# O si no tienes HTTPS:
+MINIO_URL=http://tu-ip-servidor:9000
+
+# Credenciales de tu instancia de MinIO
+MINIO_ACCESS_KEY=tu_access_key
+MINIO_SECRET_KEY=tu_secret_key
+```
+
+**Notas importantes para Dokploy:**
+1. Asegúrate de que el puerto 9000 esté expuesto en tu contenedor de MinIO
+2. Si usas un proxy inverso (Traefik, Nginx), configúralo para el puerto 9000
+3. Verifica que tu aplicación pueda alcanzar la URL de MinIO (revisar firewall/red)
 
 ## 🚀 Cómo Usar el Servicio
 
@@ -154,3 +182,46 @@ Configura un bucket como público (se ejecuta automáticamente en `onModuleInit`
    const fileName = fileUrl.split('/').pop();
    await this.minioService.deleteService(fileName);
    ```
+
+## 🔍 Solución de Problemas
+
+### Error: "S3 API Requests must be made to API port"
+
+**Causa**: Estás intentando conectarte al puerto incorrecto de MinIO.
+
+**Solución**: 
+- Verifica que `MINIO_URL` apunte al **puerto 9000** (API), no al 9001 (consola)
+- Correcto: `http://localhost:9000` o `https://minio.tudominio.com`
+- Incorrecto: `http://localhost:9001`
+
+### Error: "Connection refused" o "Network error"
+
+**Posibles causas y soluciones**:
+
+1. **MinIO no está ejecutándose**:
+   - Para Docker local: `docker compose -f docker-compose.local-services.yml up -d`
+   - Para Dokploy: Verifica que el contenedor esté corriendo
+
+2. **Puerto no expuesto**:
+   - Verifica que el puerto 9000 esté abierto en el firewall
+   - En Dokploy: Asegúrate de que el puerto esté mapeado correctamente
+
+3. **Red incorrecta**:
+   - Si usas Docker: Verifica que los contenedores estén en la misma red
+   - Para servicios externos: Verifica conectividad con `curl http://tu-minio:9000`
+
+### Error: "Access Denied"
+
+**Solución**: 
+- Verifica que `MINIO_ACCESS_KEY` y `MINIO_SECRET_KEY` sean correctos
+- Asegúrate de que el usuario tiene permisos para crear buckets y subir archivos
+
+### La aplicación no inicia
+
+**Solución**: Con la nueva versión del servicio, la aplicación **no debería crashear** si MinIO no está disponible. Simplemente verás warnings en los logs:
+```
+[MinioService] MinIO configuration is incomplete. Skipping initialization.
+[MinioService] Application will continue without MinIO functionality
+```
+
+Si aún crashea, revisa los logs para identificar el problema específico.
