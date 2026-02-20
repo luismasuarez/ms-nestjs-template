@@ -20,9 +20,9 @@ export class MinioService implements OnModuleInit {
    }); */
 
   async onModuleInit() {
-    const minioUrl = this.configService.get<string>('MINIO_URL') as string;
-    const accessKeyId = this.configService.get<string>('MINIO_ACCESS_KEY') as string;
-    const secretAccessKey = this.configService.get<string>('MINIO_SECRET_KEY') as string;
+    const minioUrl = process.env.MINIO_URL || ''
+    const accessKeyId = process.env.MINIO_ACCESS_KEY || ''
+    const secretAccessKey = process.env.MINIO_SECRET_KEY || ''
 
     this.s3 = new S3Client({
       region: 'us-east-1',
