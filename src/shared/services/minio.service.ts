@@ -18,13 +18,30 @@ export class MinioService implements OnModuleInit {
 
   constructor(private readonly configService: ConfigService) {
     // Configuración de MinIO desde variables de entorno
-    this.MINIO_ENDPOINT = this.configService.get<string>('MINIO_ENDPOINT', 'localhost');
-    this.MINIO_PORT = this.configService.get<number>('MINIO_PORT', 9000);
-    this.MINIO_USE_SSL = this.configService.get<string>('MINIO_USE_SSL') === 'true';
-    this.MINIO_ACCESS_KEY = this.configService.get<string>('MINIO_ACCESS_KEY') ||
-                            this.configService.get<string>('MINIO_ROOT_USER', 'minioadmin');
+    const minioUrl = this.configService.get<string>('MINIO_URL');
+
+    if (minioUrl) {
+      // Parsear MINIO_URL (ej: https://minio-api.steampunker.xyz o http://localhost:9000)
+      try {
+        const url = new URL(minioUrl);
+        this.MINIO_ENDPOINT = url.hostname;
+        this.MINIO_PORT = url.port ? parseInt(url.port) : (url.protocol === 'https:' ? 443 : 9000);
+        this.MINIO_USE_SSL = url.protocol === 'https:';
+      } catch (error) {
+        this.logger.warn('Invalid MINIO_URL, using default localhost configuration');
+        this.MINIO_ENDPOINT = 'localhost';
+        this.MINIO_PORT = 9000;
+        this.MINIO_USE_SSL = false;
+      }
+    } else {
+      // Fallback a configuración tradicional
+      this.MINIO_ENDPOINT = this.configService.get<string>('MINIO_ENDPOINT', 'localhost');
+      this.MINIO_PORT = this.configService.get<number>('MINIO_PORT', 9000);
+      this.MINIO_USE_SSL = this.configService.get<string>('MINIO_USE_SSL') === 'true';
+    }
+
     this.MINIO_SECRET_KEY = this.configService.get<string>('MINIO_SECRET_KEY') ||
-                            this.configService.get<string>('MINIO_ROOT_PASSWORD', 'minioadmin');
+      this.configService.get<string>('MINIO_ROOT_PASSWORD', 'minioadmin');
 
     // Buckets configurables
     this.STATIC_BUCKET = this.configService.get<string>('MINIO_STATIC_BUCKET', 'static-files');
