@@ -34,6 +34,10 @@ class EnvVars {
   @IsString()
   @IsNotEmpty()
   RABBITMQ_DEFAULT_PASS!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  MS_QUEUE!: string;
 }
 
 export const validateEnv = (config: Record<string, unknown>) => {
