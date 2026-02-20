@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { ExampleRpcController } from './example/example.rpc.controller';
+import { ExampleRpcController } from './modules/example/example.rpc.controller';
 import { LoggingInterceptor } from './shared/lib/logging.interceptor';
 import { RabbitMQInterceptor } from './shared/lib/rabbitmq.interceptor';
 import { NativeRpcService } from './shared/services/native-rpc.service';
