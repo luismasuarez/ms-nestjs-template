@@ -1,4 +1,4 @@
-import { ExampleRpcController } from './example.rpc.controller';
+import { MembersExampleRpcController } from './members.example.rpc.controller';
 import { QueueMembersOperations, Queues } from '../../shared/constants/queues';
 import type { UserFromRmq } from '../../shared/decorators/user.decorator';
 
@@ -7,10 +7,10 @@ describe('ExampleRpcController', () => {
     const nativeRpcService = {
       produceRpc: jest.fn().mockResolvedValue({ ok: true }),
     };
-    const controller = new ExampleRpcController(nativeRpcService as any);
+    const controller = new MembersExampleRpcController(nativeRpcService as any);
     const user = { church: 'church-1' } as UserFromRmq;
 
-    const response = await controller.handleTestPattern(
+    const response = await controller.handleMembersExample(
       { memberId: 'member-1' },
       user,
     );
@@ -33,10 +33,10 @@ describe('ExampleRpcController', () => {
     const nativeRpcService = {
       produceRpc: jest.fn().mockResolvedValue({ items: [] }),
     };
-    const controller = new ExampleRpcController(nativeRpcService as any);
+    const controller = new MembersExampleRpcController(nativeRpcService as any);
     const user = { church: 'church-1' } as UserFromRmq;
 
-    const response = await controller.handleTestPattern({}, user);
+    const response = await controller.handleMembersExample({}, user);
 
     expect(nativeRpcService.produceRpc).toHaveBeenCalledWith(
       {
