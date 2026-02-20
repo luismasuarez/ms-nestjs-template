@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import * as Minio from "minio";
+import { getMinioConfig } from "../config/minio.config";
 
 @Injectable()
 export class MinioService implements OnModuleInit {
@@ -16,36 +16,17 @@ export class MinioService implements OnModuleInit {
   private readonly MINIO_ACCESS_KEY: string;
   private readonly MINIO_SECRET_KEY: string;
 
-  constructor(private readonly configService: ConfigService) {
-    // Configuración de MinIO desde variables de entorno
-    const minioUrl = this.configService.get<string>('MINIO_URL');
+  constructor() {
+    // Configuración de MinIO desde variables de entorno usando process.env
+    const config = getMinioConfig();
 
-    if (minioUrl) {
-      // Parsear MINIO_URL (ej: https://minio-api.steampunker.xyz o http://localhost:9000)
-      try {
-        const url = new URL(minioUrl);
-        this.MINIO_ENDPOINT = url.hostname;
-        this.MINIO_PORT = url.port ? parseInt(url.port) : (url.protocol === 'https:' ? 443 : 9000);
-        this.MINIO_USE_SSL = url.protocol === 'https:';
-      } catch (error) {
-        this.logger.warn('Invalid MINIO_URL, using default localhost configuration');
-        this.MINIO_ENDPOINT = 'localhost';
-        this.MINIO_PORT = 9000;
-        this.MINIO_USE_SSL = false;
-      }
-    } else {
-      // Fallback a configuración tradicional
-      this.MINIO_ENDPOINT = this.configService.get<string>('MINIO_ENDPOINT', 'localhost');
-      this.MINIO_PORT = this.configService.get<number>('MINIO_PORT', 9000);
-      this.MINIO_USE_SSL = this.configService.get<string>('MINIO_USE_SSL') === 'true';
-    }
-
-    this.MINIO_SECRET_KEY = this.configService.get<string>('MINIO_SECRET_KEY') ||
-      this.configService.get<string>('MINIO_ROOT_PASSWORD', 'minioadmin');
-
-    // Buckets configurables
-    this.STATIC_BUCKET = this.configService.get<string>('MINIO_STATIC_BUCKET', 'static-files');
-    this.EVENTS_BUCKET = this.configService.get<string>('MINIO_EVENTS_BUCKET', 'events');
+    this.MINIO_ENDPOINT = config.endpoint;
+    this.MINIO_PORT = config.port;
+    this.MINIO_USE_SSL = config.useSSL;
+    this.MINIO_ACCESS_KEY = config.accessKey;
+    this.MINIO_SECRET_KEY = config.secretKey;
+    this.STATIC_BUCKET = config.staticBucket;
+    this.EVENTS_BUCKET = config.eventsBucket;
 
     // Inicializar cliente MinIO
     this.minioClient = new Minio.Client({
