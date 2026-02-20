@@ -187,14 +187,14 @@ src/
     ├── lib/                         # Librerías y utilidades
     │   ├── logging.interceptor.ts  # Interceptor para logging
     │   └── rabbitmq.interceptor.ts # Interceptor para transformar respuestas RPC
-    └── services/                    # Servicios compartidos
-        ├── api-response.service.ts  # Servicio de respuestas estándar
-        ├── prisma.service.ts        # Servicio de Prisma
-        └── rpc.service.ts           # Servicio para comunicación RPC
+    ├── services/                    # Servicios compartidos
+      ├── api-response.service.ts  # Servicio de respuestas estándar
+      ├── prisma.service.ts        # Servicio de Prisma
+      └── rpc.service.ts           # Servicio para comunicación RPC
 
-prisma/
-├── schema.prisma                    # Esquema de base de datos
-└── seed.ts                          # Script para datos iniciales
+  Prisma (ubicado en `src/shared/prisma`)
+  ├── schema.prisma                    # Esquema de base de datos (src/shared/prisma/schema.prisma)
+  └── seed.ts                          # Script para datos iniciales (src/shared/prisma/seed.ts)
 
 test/                               # Tests e2e
 ```
@@ -203,7 +203,7 @@ test/                               # Tests e2e
 
 ### Prisma ORM
 
-Este proyecto usa **Prisma** como ORM. El esquema se define en `prisma/schema.prisma`.
+Este proyecto usa **Prisma** como ORM. El esquema se define en `src/shared/prisma/schema.prisma`.
 
 ### Migraciones
 
@@ -244,7 +244,7 @@ pnpm prisma:generate
 
 ### Seed (Datos Iniciales)
 
-Para poblar la base de datos con datos iniciales, edita `prisma/seed.ts` y ejecuta:
+Para poblar la base de datos con datos iniciales, edita `src/shared/prisma/seed.ts` y ejecuta:
 
 ```bash
 pnpm prisma:seed
