@@ -1,4 +1,5 @@
 import { ExecutionContext, Injectable, OnModuleDestroy } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClientProxy, ClientProxyFactory, RmqContext } from '@nestjs/microservices';
 import { Channel } from 'amqplib';
 import { firstValueFrom } from 'rxjs';
@@ -15,9 +16,10 @@ export interface RpcContext {
 export class NativeRpcService implements OnModuleDestroy {
   private client: ClientProxy;
 
-  constructor() {
+  constructor(private readonly config: ConfigService) {
+    const queue = this.config.get<string>('MS_QUEUE') ?? Queues.DEFAULT;
     this.client = ClientProxyFactory.create(
-      rabbitMqClientConfig({ queue: Queues.DEFAULT }) as any,
+      rabbitMqClientConfig({ queue }) as any,
     );
   }
 

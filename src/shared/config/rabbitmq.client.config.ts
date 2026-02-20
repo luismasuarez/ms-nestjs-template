@@ -1,8 +1,7 @@
 import { RmqOptions, Transport } from '@nestjs/microservices';
-import { Queues } from '../constants/queues';
 
 type RabbitMqClientConfig = {
-  queue: Queues;
+  queue: string;
 };
 
 export const rabbitMqClientConfig = ({
