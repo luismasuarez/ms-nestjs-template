@@ -45,8 +45,14 @@ WORKDIR /app
 # Copy node_modules and dist from builder
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+
+# Prisma config / schema (según tu estructura actual)
 COPY --from=builder /app/src/shared/prisma ./src/shared/prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+
+# 👇 IMPORTANTE: migrations
+COPY --from=builder /app/prisma ./prisma
+
 COPY package.json ./
 
 # Switch to non-root user

@@ -9,7 +9,7 @@ services:
     volumes:
       - ms_nestjs_template_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d ${POSTGRES_DB}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,6 +26,14 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+
+      MS_QUEUE: ${MS_QUEUE}
+
+      MINIO_URL: ${MINIO_URL}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_STATIC_BUCKET: ${MINIO_STATIC_BUCKET}
+      MINIO_EVENTS_BUCKET: ${MINIO_EVENTS_BUCKET}
     depends_on:
       postgres:
         condition: service_healthy
