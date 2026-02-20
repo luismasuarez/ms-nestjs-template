@@ -8,6 +8,7 @@ import { RpcException } from '@nestjs/microservices';
 import { Observable, catchError, throwError } from 'rxjs';
 import {
   Response,
+  ErrorCodes,
   ResponseService,
 } from '../services/response.service';
 
@@ -33,7 +34,7 @@ export class RpcErrorInterceptor implements NestInterceptor {
       }
 
       if (typeof rpcError === 'string') {
-        return this.responseService.error(rpcError, 'RPC_ERROR');
+        return this.responseService.error(rpcError, ErrorCodes.Rpc);
       }
 
       if (typeof rpcError === 'object' && rpcError !== null) {
@@ -44,7 +45,7 @@ export class RpcErrorInterceptor implements NestInterceptor {
         const code =
           'code' in rpcError && typeof rpcError.code === 'string'
             ? rpcError.code
-            : 'RPC_ERROR';
+            : ErrorCodes.Rpc;
         const details =
           'details' in rpcError ? (rpcError as Record<string, unknown>).details : rpcError;
 
@@ -52,9 +53,13 @@ export class RpcErrorInterceptor implements NestInterceptor {
       }
     }
 
+    if (this.isValidationError(error)) {
+      return this.responseService.validationError(error.response.message);
+    }
+
     const unknownError = error as { message?: string; code?: string } | null;
     const message = unknownError?.message ?? 'Internal server error';
-    const code = unknownError?.code ?? 'INTERNAL_ERROR';
+    const code = unknownError?.code ?? ErrorCodes.Internal;
 
     return this.responseService.error(message, code);
   }
@@ -71,5 +76,17 @@ export class RpcErrorInterceptor implements NestInterceptor {
       typeof response.error?.message === 'string' &&
       typeof response.error?.code === 'string'
     );
+  }
+
+  private isValidationError(
+    error: unknown,
+  ): error is { response: { message: unknown[] } } {
+    if (typeof error !== 'object' || error === null) {
+      return false;
+    }
+
+    const maybeError = error as { response?: { message?: unknown } };
+
+    return Array.isArray(maybeError.response?.message);
   }
 }

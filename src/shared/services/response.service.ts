@@ -25,6 +25,19 @@ export interface Response<T = any> {
   };
 }
 
+export const ErrorCodes = {
+  Internal: 'INTERNAL_ERROR',
+  Rpc: 'RPC_ERROR',
+  Validation: 'VALIDATION_ERROR',
+  BadRequest: 'BAD_REQUEST',
+  NotFound: 'NOT_FOUND',
+  Conflict: 'CONFLICT',
+  Forbidden: 'FORBIDDEN',
+  Unauthorized: 'UNAUTHORIZED',
+} as const;
+
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
+
 @Injectable()
 export class ResponseService {
   private now() {
@@ -41,6 +54,10 @@ export class ResponseService {
         requestId,
       },
     };
+  }
+
+  ok<T>(data: T, message?: string, requestId?: string): Response<T> {
+    return this.success(data, message, requestId);
   }
 
   /**
@@ -107,7 +124,7 @@ export class ResponseService {
 
   error(
     message: string,
-    code = 'INTERNAL_ERROR',
+    code: ErrorCode | string = ErrorCodes.Internal,
     details?: any,
     requestId?: string,
   ): Response {
@@ -123,6 +140,10 @@ export class ResponseService {
         requestId,
       },
     };
+  }
+
+  validationError(details: any, requestId?: string): Response {
+    return this.error('Validation failed', ErrorCodes.Validation, details, requestId);
   }
 
   warning(message: string, data?: any, requestId?: string): Response {
