@@ -1,8 +1,9 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
+import path from 'node:path';
 import { ResponseService } from '../../shared/services/response.service';
 
-const { name, version } = require('../../../package.json') as {
+const { name, version } = require(path.resolve(process.cwd(), 'package.json')) as {
   name: string;
   version: string;
 };
